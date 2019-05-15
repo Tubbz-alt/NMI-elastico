@@ -730,9 +730,7 @@ if ($MYDEBUG == true) then
 EOD
 end 
 
-puts "*** ATTENTION ************************************************* "
-puts "the program is script under maintenance/improvement"
-puts "***************************************************************  "
+
 
 
 

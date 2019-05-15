@@ -3,36 +3,49 @@
 =begin
 
 TODO 
+-] manual page in HTML, for easy print 
+
+DONE 
 -] possibility of sorting results per log date [-s]
 -] possibility of augmenting the search results [-l] 
 -] possibility of restricting the date for the search [-d]
+
 
 =end 
 
 
 require 'json'
 require 'date'
+require 'tempfile'
 
 # require 'pry'
 
 
+
 doc = <<HERED
 
+<pre>
 <b>NAME</b>
-elastico -- search and display loglines from Elasticsearch.
+
+elastico -- Search log-lines stored in Elasticsearch.
 
 <b>SYNOPSIS</b>
-$> elastico -h | less -R           # read this manual 
-$> elastico [-l num] [-s] [-h|H] QUERY
+
+<b>$> elastico -h </b>                    # open the manual page with pager 'less'
+
+<b>$> elastico -h html</b>                # write in STDOUT the manual as HTML page
+
+<b>$> elastico [-d] [-l num] [-t TIMESTRING] [-s] [-h] QUERY </b>
 
 <b>DESCRIPTION</b>
+
 The fastest way to start to use this program is to read 
 the examples section at the end of this document.
 
 The syntax of the QUERY is the so called "Lucene Query Syntax".
 It is almost indentical of the one accpeted by Kibana interface. 
 
-By default the search is made into the "lclslogs" index, 
+By default the search is made into the <b>lclslogs</b> index, 
 that is, we search into all log files lines stored in "psmetric01:/u2/logs"
 and processed by Elasticsearch.
 
@@ -41,16 +54,22 @@ The field contains the log line as red from 'psmetric01:/u2/logs/*/*' .
 
 At the time of writing this text the "lclslogs" index contains
 the following fields: 
-<b>date</b>    : date appearing in the logfile, extended to contain a guessed 
-                 value for the year.  
+
+<b>date</b>    : Date appearing in the logfile, extended to contain a guessed 
+          value for the year.  
+
 <b>machine</b> : Machine producing the message. 
           (eg. psmetric01, psana101 etc. )
+
 <b>service</b> : Service producing the message. 
-          (eg. cron, 
+          (eg. cron, systemd, ... )
+
 <b>message</b> : The message part of a log line. 
           (eg. "Cannot create socket to [psmonit]:8020 -- Connection refused")
+
 <b>file</b>    : Logfile name where the message was found: 
           (eg. messages, cron, etc. )
+
 <b>src</b>     : To simplify the search by shell this field was added in a second
           phase. It contains the log line as it is recorded in 'psmetric01:/u2/logs/*/*'.
           eg:
@@ -58,24 +77,84 @@ the following fields:
 
 <b>PARAMETERS</b>
 
-   <b>NOTE</b>. For all boolean parameters, that is parameters enabling or disabling a 
-         feature, an upcase character means the opposite of its correspondant 
-         lowercase character. Example: '-S' has the opposite effect of '-s'.
+   <b>-d</b>  Shows <b>debug</b> informations. Intermediate values and global variables 
+         that can simplify the understanding of the program in case something goes wrong.
+         The debug information is printed at the end of the search results into STDERR.
 
    <b>-l</b>  Maximum number of <b>lines</b> to retrive from Elasticsearch. It must
-       be a positive integer. Default to 20.
+       be a positive integer. Default to 20. The current maximum value is 10_000.
+       This value is overridden by the '-t' parameter.
 
    <b>-h</b>  If given as the only parameter then the program will output 
        the documentation. If there are other parameters then the 
-       matched words in output will be <b>highlight</b>ed. Words 
+       matched words in output will be <b>highlighted</b>. Words 
        of specific fields as e.g. machine:foo will not be highlithed,
        it only applies to the default <b>src</b> field. Default to false.
 
-   <b>-s</b>  Asks Elasticsearch to sort the result not by relevence, as its 
-       default but by time. Default to true.
+   <b>-s</b> By default this program asks Elasticsearch to <b>sort</b> the results 
+       by time. With this parameter Elasticsearch will be asked instead to 
+       sort the results by <b>relevance</b>. 
+
+   <b>-t</b> <b>Time window</b>. With this parameter we tell Elasticsearch we are 
+       interested in filtering the search to to a specific time window.
+       This parameters overrides the limit imposed by the '-l' parameter. 
+       The maxium number of results obtainable is fixed to 10_000. 
+  
+       There are three accepted syntaxes to specifiy the time window:
+
+         1] Delta backward in time from present time.
+               -t ABS_DELTA
+                  ABS_DELTA matches regexp /\\d+[dhm]/
+
+               -t 10m             => filter results to the last 10 minutes 
+
+         2] Delta backward/forward in time from a specified date-time instant.
+               -t [YYYY]-[MMM]-[DD]-[HH:MM]__[+-]ABS_DELTA
+               -t  2018-dec-10-10:30__-10m
+               -t  dec-10__+3d 
+
+         3] Explicit time window described by two date-time points. 
+               -t [YYYY]-[MMM]-[DD]-[HH:MM]__[YYYY]-[MMM]-[DD]-[HH:MM]
+               -t 2018-dec-10-15:50__2018-dec-15-16:30          
+               -t dec-10__dec-15
+               -t 14:30__15:15
+
+       In general, when data is missing from a time point description values are 
+       inferred from the current day. So dec-10 is auto completed to 2018-dec-10.       
+
+       If the hour is missing then, on the left hand side of a '__' divider it is 
+       auto-completed into the first second of the selected, on the right hand side of 
+       a '__' divider it is autocompleted to the last second of the selected day. 
+       
+       Given the generality and flexibility of TIMESTRING it is better described
+       by examples than by a formal grammar. See the Examples section.       
 
 
-<b>EXAMPLES</b>
+<b>REQUIREMENTS </b>
+
+       -] <b>curl</b>. This software is not at all necessary and the dependency
+          may be removed in future releases.   
+
+       -] <b>less</b>. The "man" page visibile with 'elastico -h' goes to default to that pager. 
+          There is not a separate man page to keep all the application in a single file,
+          code and documentation.
+
+       -] <b>ruby</b>. This software is written in Ruby. Rationale; Ruby is some kind
+          of a OO version of Perl. Ideal for intense regexp work. 
+    
+<b>REFERENCES </b> 
+
+       -] "Lucene Query Syntax", see https://goo.gl/GPPSdJ
+
+       -] "Elasticsearch the definitive guide" by Gromley, Tong -- O'Reilly 2015.
+
+<b>AUTHOR</b>
+
+Dr. Nicola Mingotti, nicola.mingott@slac.stanford.edu. 
+
+The application has been last modified on date 21 Dec 2018.
+  
+<b>EXAMPLES </b>
 
 # Generic search over a word ... here a machine name 
 .b $> elastico psana101        
@@ -83,15 +162,15 @@ the following fields:
 # Generic search over a word ... here a service name 
 .b $> elastico monit           
 
-# Generic search over a wors ... here a user name    
+# Generic search over a word ... here a user name    
 .b $> elastico nmingott        
 
 # Generic search over an approximate username 
-# Quote is necessary because "~" is special in bash.
+# Quote is necessary because "~" is special character in Bash.
 .b $> elastic 'omar~'
 
 # Generic search over everything that can be: psana101, psana103 etc.
-# observe that the quotes are fundamental to stop Bash from interpreting
+# Observe that the quotes are fundamental to stop Bash from interpreting
 # "*". 
 .b $> elastico 'psana*'        
 
@@ -100,7 +179,7 @@ the following fields:
 # Booleans MUST BE upcase words.
 .b $> elastico 'nmingott AND machine:*metric*'
 
-# Elaboration respect to the previous maching all line where "nmingott"
+# Elaboration respect to the previous example, matching all lines where "nmingott"
 # appers and the machine is a string containing *ana* or *metric*.
 # This examples shows that (...) is the syntax for  
 # grouping of booleans and that it is not necessary to write
@@ -125,6 +204,49 @@ the following fields:
 # Autocomplete only for a specific number of characters
 # In this case all 'psana' followed by 3 characters.
 .b $> psana -h 'psana???'
+
+# === <b>Time Window Selections</b> ===========
+
+# Show all logs related to 'psana???' in the last
+# 5 minutes. With the same syntax we can use the specifiers
+# <b>m</b> minutes, <b>h</b> hours, <b>d</b> days.
+.b $> elastico -t 5m 'psana???'
+
+# If we are unhappy about the result and suspect something
+# is wrong the first thing to do is to check how 'elastico' interpreted
+# the time window. The information is written after the search results, on STDERR.
+.b $> elastico -d -t 5m 'psana???'
+
+# We want to see the results moving around a specific
+# point in time. Suppose 5 minutes after 
+# the date 15 dic 2018 at 13:00
+.b $> elastico -t 2018-dec-15-13:00__+5m 'psana???'
+or, if we are still in 2018: 
+.b $> elastico -t dec-15-13:00__+5m 'psana???'
+
+# We want to see the results moving around a specific
+# point in time. Suppose 10 minutes before
+# the date 15 dic 2018 at 13:00
+.b $> elastico -t 2018-dec-15-13:00__-10m 'psana???'
+or, if we are still in 2018: 
+.b $> elastico -t dec-15-13:00__-10m 'psana???'
+
+# We want to see the results between two specific points in time 
+.b $> elastico  -t 2018-dec-15-13:00__2018-dec-16-14:25 'psana101'
+or, if we are still in 2018 
+.b $> elastico  -t dec-15-13:00__dec-16-14:25 'psana101'
+
+# We want to see the data in two specific date, all day hours.
+# If the hour is not specified and there are two specific date-time
+# points then the hour of the date on the left hand side is 00:00,
+# the hour for the right hand side is 23:59.
+.b $> elastico  -t dec-15__dec-16 'psana103'
+
+# Filter all today logs generated beween 10:30 and 11:00.
+.b $> elastico  -t 10:30__11:00 'psana103'
+
+
+</pre>
 
 HERED
 
@@ -336,19 +458,47 @@ end
 
 # -] If "-h" is first argument show the documentation
 #
-if (ARGV.length == 1) and (ARGV[0] == "-h") then 
-  doc2 = doc.dup
-  doc2.gsub! /<b>(.*?)<\/b>/, bolden('\1')
-  doc2.split(/\n/).each do |l|
-    if l.match(/^\.b/) then 
-      tmp = l.sub(/^\.b /, "")
-      puts " " + bolden(tmp)
-    else
-      puts " " + l
+if (ARGV.length <= 2) and (ARGV[0] == "-h") then 
+
+  if ARGV.length == 1 then 
+    Tempfile.open('elasticoManual', '/tmp') { |f|  
+      doc2 = doc.dup
+      # get rid of HTML formatting 
+      doc2.gsub! /<pre>/, ""
+      doc2.gsub! /<\/pre>/, ""    
+      # substitute "<b>" with terminal "bold"
+      doc2.gsub! /<b>(.*?)<\/b>/, bolden('\1')
+      doc2.split(/\n/).each do |l|
+        if l.match(/^\.b/) then 
+          tmp = l.sub(/^\.b /, "")
+          f.puts " " + bolden(tmp)
+        else
+          f.puts " " + l
+        end
+      end
+      system("less -R #{f.path}")
+    }
+    exit(0); 
+
+  # 
+  # if we want the HTML page the we need some modifications 
+  # 
+  elsif (ARGV.length == 2) and (ARGV[0] == "-h") and (ARGV[1] == "html")
+    doc2 = doc.dup
+    puts "<html>"
+    puts "<body>"
+    doc2.split(/\n/).each do |l|
+      if l.match(/^\.b/) then 
+        tmp = l.sub(/^\.b\ *(.*)$/, '<b>\1</b>')
+        puts " " + tmp
+      else
+        puts " " + l
+      end
     end
+    puts "</body>"
+    puts "</html>"
+    exit(0);     
   end
-  # puts doc; 
-  exit(0); 
 end 
 
 # -] Parameters consistency check.
@@ -531,7 +681,7 @@ JSON.parse(tmp)['hits']['hits'].each do |el|
   end
 end; nil 
 
-STDERR.puts "=== Development version of Elastico, unstable, don't use ===="
+# STDERR.puts "=== Development version of Elastico, unstable, don't use ===="
 # -] Printer all lines in "lineBuffer".
 lineBuffer.reverse.each do |l|
   next if l.nil?
@@ -541,8 +691,8 @@ lineBuffer.reverse.each do |l|
     puts l
   end
 end 
-STDERR.puts "=========== Development version of 'elastico', unstable, don't use ===="
 
+# STDERR.puts "=== Development version of Elastico, unstable, don't use ===="
 
 # -] Print to STDERR debug informations if parameter "-d" is in ARGV.
 #
@@ -579,7 +729,6 @@ if ($MYDEBUG == true) then
 
 EOD
 end 
-
 
 
 
