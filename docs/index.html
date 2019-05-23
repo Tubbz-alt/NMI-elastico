@@ -1,9 +1,89 @@
 
+
 <html>
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="description" content="Project elastico.">
+<meta name="keywords" content="HTML,CSS,JavaScript">
+<meta name="author" content="Dr. Nicola Mingotti">
+
+<!-- Fonts da Google  -->
+<link href='https://fonts.googleapis.com/css?family=Roboto Condensed' rel='stylesheet'>
+<link href='https://fonts.googleapis.com/css?family=Roboto Mono' rel='stylesheet'>
+<link href='https://fonts.googleapis.com/css?family=Noto Sans' rel='stylesheet'>
+<link href='https://fonts.googleapis.com/css?family=Rambla' rel='stylesheet'>
+
+<!-- Foglio di stile   -->
+<link rel="stylesheet" href="./index.css">
+
+
+</head>
 
 <body>
 
-Hello World ! 
+<h1> elastico (under works)</h1>
+<hr>
+<p>
+Shell tool to query Elasticsearch about logs.  <a style="margin-left:10px;" href="">[code on GitHub]</a>
+</p>
+
+<h2> Improvements under focus </h2>
+<hr>
+
+<ul>
+<li> <b>shorten time span</b>.  expect to ask <i>elastico</i> about recent logs and we would like <i>elastico</i> to answer fast, let's say in 1-2 seconds. To achieve so I will modify the program in such a way that by default it searches in the last 24 hours. Who wants to search more deeply will need to add extra parameters.
+
+<li> <b>simplify the simple search</b>. A few days ago Omar wanted to use <i>elastico</i> to see if a system was up. The problem is that the machine name was something like "foo-bar-baz". This is indeed a problem, because in Lucene sytax "-" is a special characters and must be escaped. So, I performed a successful search as 
+<div class="cmd"> user@psmetric01 $> elastico 'foo AND bar AND baz'</div> 
+The problem was uncovered. The shell power-user is already thinking in term of <i>globs</i>, <i>regexp</i> and <i>bash</i> substitutions, adding also the <i>Lucene</i> to the stack seems too much. <br>
+<p>
+I intend to modify <i>elastico</i> in such a way that, by default it will search what you ask. I guess the best way is to follow this rule, which is similar to what Google does. 
+<ol>
+<li> every word is a sequence of characters separated by a whitespace.
+<li> all characters in each word will be escaped to enter in Lucense in they raw form, without further interpretation.
+<li> the statement 'word1 wor2' will be converted to the Lucene qery 'word1 AND word2' <b>ATTENTION</b>. Google would substituted the AND with OR and then sort by relevance. We don't think this is a good approach for logs. We prefer to sort results by log-time and run the search with AND.
+</ol>
+</p>
+
+<li> <b>install script</b>. Up to now <i>elastico</i> is usable but it is not installed in a proper way. It is just a link to some code in <i>nmingott</i> home directory. This should be changed. 
+
+<div class="cmd withOutput">nmingott@psmetric01 $> file /usr/bin/elastico</div>
+<div class="output">/usr/bin/elastico: symbolic link to `/reg/neh/home/nmingott/scripts/elastico/elastico.rb'</div>
+
+</ul>
+
+
+<h2> Important  oneline facts </h2>
+
+<ol>
+<li> <i>elastico</i> is currently installed and woring in <b>psmetric01</b>. If you can login into <i>psmetric01</i> then you can use it. 
+
+<li> <i>elastico</i> is for searching <b>logs</b>. More specifically, <i>elastico</i> is built to search into Elasticsearch <b>lclslogs</b> index.
+
+<li> <i>Elasticsearch</i> runs in <i>psmetric04</i>. The query is asked by <i>psmetric01</i> but it will be resolved by <i>psmetric04</i>, that is the machine doing all the work. 
+
+<li> <b>Don't kill</b>, or <span class="cmd">Ctrl-c</span>, a long query unless you are ready to keep the load of <b>psmetric04</b> under control. Let the query die alone, don't kill it, it is the least effort and trouble-free solution. 
+
+<li> You may want to compare <i>elastico</i> output with <b>Kibana</b>. 
+
+<li> <i>elasico</i> tries to make your life easier. To do that, it makes some assumptions on you: 
+<ol>
+<li> It supposes you are interested in recent logs, not old stuff.
+<li> It supposes you do not know <i>Lucene</i> syntax.
+<li> It supposes you are a Unix shell power user. 
+<p style="margin-top:5px">
+<u>Test yoursef</u>. <i>bash</i> shell, it supposes you know that $> foocmd bar baz is not equal to $> foocmd 'bar baz'. Also you know that $> foocmd "sorry $pal" is different from $> foocmd 'sorry $pal'. If these examples puzzled you I reccoemnd you perform your serches by <i>Kibana</i> because the shell will get into your way.
+</p>
+</ol>
+
+</ol>
+
+<h2> What does it do ? </h2>
+<hr>
+
+
 
 </body>
 

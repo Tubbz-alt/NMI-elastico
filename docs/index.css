@@ -1,0 +1,147 @@
+
+/* !!! CSS reset !!!  per eliminare strani 2px in piu' che appaiono qua a la */
+* {
+   margin: 0;
+   padding: 0;
+}
+
+.not {
+    display: none;
+}
+
+body {
+
+    /* font-family: "Times New Roman", Times, serif; */
+    /* font-family: "Roboto Condensed"; */
+    font-family: "Rambla";
+    /* font-family: "Dejavu Sans"; */
+
+    font-size: 1.0em;
+    line-height: 1.5;
+
+    margin-top: 20px;;
+    margin-bottom: 20px;;
+    margin-right: 10%;
+    margin-left: 10%;
+    border: 1px solid grey;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 20px;
+
+}
+
+h1 {
+  margin-top: 40px;
+  /* margin-bottom: 20px; */
+}
+
+
+h2 {
+  margin-top: 60px;
+  /* margin-bottom: 30px; */
+}
+
+hr { 
+    margin-bottom:30px;
+}
+
+
+p { 
+    margin-top: 20px;
+}
+
+b { 
+   color: maroon;
+}
+
+ol { 
+    margin-top: 20px;
+}
+
+ul { 
+    margin-top: 20px;
+}
+
+li { 
+    margin-left: 40px;
+    margin-top: 10px;
+}
+
+div.centerDiv { 
+     text-align: center;     
+}
+
+div#spaceAfterTitle { 
+    margin-top: 50px;
+    margin-bottom: 20px;
+}
+
+
+ol.factList { 
+    margin-left: 20px;
+}
+
+li.fact { 
+    margin-top: 20px;
+}
+
+span.proc {
+   font-family: "Roboto Mono";
+   font-size: 0.80em;    
+}
+
+span.cmd { 
+   font-family: "Roboto Mono";
+   font-size: 0.80em;
+   /* font-family: monospace; */
+    background-color: lightgrey;
+    color: blue;    
+}
+
+div.cmd { 
+   font-family: "Roboto Mono";
+   font-size: 0.80em;
+   /* font-family: monospace; */
+   white-space: pre-wrap;
+   margin-top: 10px;
+   margin-bottom: 10px;
+   padding-left:10px;
+   padding-bottom:10px;
+   padding-top:10px;
+   background-color: lightgrey;
+   color: blue;    
+}
+
+div.withOutput {
+   margin-bottom: 0px;
+   padding-bottom: 0px;
+}
+
+div.output { 
+   font-family: "Roboto Mono";
+   font-size: 0.80em;
+   /* font-family: monospace; */
+    overflow-x: auto;
+   /* white-space: pre-wrap; */
+   white-space: pre;
+   background-color: lightgrey;
+   color: black;        
+   padding-left:10px;
+   padding-bottom:10px;   
+}
+
+
+div.configFile { 
+   font-family: "Roboto Mono";
+   font-size: 0.80em;
+   /* font-family: monospace; */
+    overflow-x: auto;
+   /* white-space: pre-wrap; */
+   white-space: pre;
+   background-color: lightgrey;
+   color: chocolate;        
+   padding-left:10px;
+   padding-bottom:10px;   
+   padding-top:10px;
+}
+
