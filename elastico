@@ -15,11 +15,6 @@ DONE
 =end 
 
 
-require 'json'
-require 'date'
-require 'tempfile'
-
-# require 'pry'
 
 
 
@@ -251,6 +246,15 @@ or, if we are still in 2018
 
 HERED
 
+
+
+require 'json'
+require 'date'
+require 'tempfile'
+
+# require 'pry'
+
+
 # Example of Lucene Query sintax to Elasticsearch CURL 
 # curl -XGET 'http://psmetric04:9200/lclslogs/_search?pretty=true' -H 'Content-Type: application/json' -d '{"query": { "query_string": { "default_field":"src", "query":"psmetric01"     }      }     }'
 
@@ -285,6 +289,8 @@ $MYDEBUG_VALS = {}
 # is true iff the time window has been specified on the command line.
 $TIME_FILTER = false;
 $DATE0 = 0
+# checked considtente with "date" :
+# $> ruby -e 'puts "unix: #{`date "+%s"`}"; puts "ruby: #{Time.now.to_i} " '
 $DATE1 = ((Time.now.to_i)*1000)
 
 # =========================================================
@@ -301,11 +307,18 @@ def emphasis(str)
   out = str.gsub /<em>(.*?)<\/em>/, "\033\[1m\\1\033\[0m"
 end
 
+# TODO 
+# modify 
+# The sistem know the correct timezone, if PDF or PST 
+# $> date '+%Z' => PST  o PDT 
+# $> date '+%:z' => -08:00 o -07:00
 def dateTimeToPST(dateTime)
   d = dateTime
+  # this can contain "-08:00" or "-07:00" if we are in San Francisco ! 
+  timeZoneDelta = `date '+%:z'`
   # if the timezone is already "-08:00" do nothing
-  return d if d.zone == "-08:00" 
-  out = DateTime.new(d.year, d.month, d.day, d.hour, d.minute, d.second, '-08:00')
+  # return d if d.zone == "-08:00" 
+  out = DateTime.new(d.year, d.month, d.day, d.hour, d.minute, d.second, timeZoneDelta )
 end 
 
 
