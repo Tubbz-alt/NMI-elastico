@@ -1,0 +1,10 @@
+#!/usr/bin/env ruby
+# -*- mode: ruby -*-
+
+# Linux : copy bin to : /usr/bin
+# FreeBSD : copy bin to : /usr/local/bin
+
+$HOST=`uname`
+
+
+
