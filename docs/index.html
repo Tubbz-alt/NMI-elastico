@@ -33,6 +33,7 @@ Shell tool to query Elasticsearch about logs.  <a style="margin-left:10px;" href
 <hr>
 
 <ul>
+
 <li> <b>shorten time span</b>.  expect to ask <i>elastico</i> about recent logs and we would like <i>elastico</i> to answer fast, let's say in 1-2 seconds. To achieve so I will modify the program in such a way that by default it searches in the last 24 hours. Who wants to search more deeply will need to add extra parameters.
 
 <li> <b>simplify the simple search</b>. A few days ago Omar wanted to use <i>elastico</i> to see if a system was up. The problem is that the machine name was something like "foo-bar-baz". This is indeed a problem, because in Lucene sytax "-" is a special characters and must be escaped. So, I performed a successful search as 
@@ -51,6 +52,9 @@ I intend to modify <i>elastico</i> in such a way that, by default it will search
 
 <div class="cmd withOutput">nmingott@psmetric01 $> file /usr/bin/elastico</div>
 <div class="output">/usr/bin/elastico: symbolic link to `/reg/neh/home/nmingott/scripts/elastico/elastico.rb'</div>
+
+<li> <b>remove curl </b>. I would like to remove <i>curl </i> from the code. It is not really necessary. 
+
 
 </ul>
 
