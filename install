@@ -4,7 +4,19 @@
 # Linux : copy bin to : /usr/bin
 # FreeBSD : copy bin to : /usr/local/bin
 
+require 'fileutils'
+
 $HOST=`uname`
+
+if ($HOST.match /linux/i) then 
+  FileUtils.copy("elastico","/usr/bin/elastico")
+elsif ($HOST.match /freebsd/i) then 
+  FileUtils.copy("elastico","/usr/local/bin/elastico")
+else 
+  STDERR.puts "> Automatic installation valid only in Linux and FreeBSD."
+  STDERR.puts "> You must copy elastico script to the appropriate position in your System."
+
+end 
 
 
 
