@@ -74,12 +74,13 @@ the following fields:
 <b>PARAMETERS</b>
 
    <b>-d</b>  Shows <b>debug</b> informations. Intermediate values and global variables 
-         that can simplify the understanding of the program in case something goes wrong.
-         The debug information is printed at the end of the search results into STDERR.
+       that can simplify the understanding of the program in case something goes wrong.
+       The debug information is printed at the end of the search results into STDERR.
 
    <b>-l</b>  Maximum number of <b>lines</b> to retrive from Elasticsearch. It must
        be a positive integer. Default to 20. The current maximum value is 10_000.
-       This value is overridden by the '-t' parameter.
+       This parameter is complementary to '-t'. When '-l' and '-t' are used together
+       then '-l' prevails.
 
    <b>-h</b>  If given as the only parameter then the program will output 
        the documentation. If there are other parameters then the 
@@ -93,8 +94,12 @@ the following fields:
 
    <b>-t</b> <b>Time window</b>. With this parameter we tell Elasticsearch we are 
        interested in filtering the search to to a specific time window.
-       This parameters overrides the limit imposed by the '-l' parameter. 
-       The maxium number of results obtainable is fixed to 10_000. 
+
+       Sometimes the time limits will not be honoured and some of the older log will be 
+       discarded. If '-t' parameter is called together with parameter '-l' then parameter 
+       '-l' will prevail. If parameter '-t' is called without parameter '-l' and its 
+       implied number of results would be larger than 10_000 then the default number of 
+       lines will be printed, that is 20.        
   
        There are three accepted syntaxes to specifiy the time window:
 
@@ -263,10 +268,16 @@ require 'tempfile'
 # that can be modified by command line parameters.
 # =========================================================
 #
-# Upper limit to the number of output lines required. 
-# This value is overriddend if the parameter "-t" is set.
+# -] Upper limit to the number of output lines required. 
+#    This value is overriddend if the parameter "-t" is set.
+# -] DEFAULT_LIMIT is useful because it is a way to discover if the user
+#    changed $LIMIT from a command line parameter. 
+# -] Limit by time is the number of lines to 
 # 
 $LIMIT = 20 
+$LIMIT_DEFAULT = 20
+$LIMIT_BY_TIME = nil
+$LIMIT_IN_TIME_AND_SIZE = nil 
 #
 # If true values are returned sorted by date, if false
 # the lines are returned by Elasticsearch 'relevance' sort.
@@ -522,8 +533,9 @@ end
 # 
 if ( ARGV.include?("-t") and 
      ARGV.include?("-l") ) then 
-  STDERR.puts "Error, parameters '-l' and '-t' are conflicting and can't be put on the same query."
-  exit(1)
+  # STDERR.puts "Error, parameters '-l' and '-t' are conflicting and can't be put on the same query."
+  # exit(1)
+  $LIMIT_IN_TIME_AND_SIZE = true 
 end 
 
 # -] Parametro "-d" 
@@ -667,18 +679,43 @@ lineBuffer = []
 #    The result is something similar to this:
 #    {"count":19,"_shards":{"total":5,"successful":5,"skipped":0,"failed":0}}
 # 
+# -] "-l" will override "-t", always. 
+#    Remember that "-l" control $LIMITS, but $LIMITS is defined by default as 20.
+#    topmost region of the code. 
+# 
+# -] If "totalResultsByTime" is greater than $LIMITS (-l) then 
+#    $LIMITS will not be changed, and $LIMITS was set to a value different from
+#    the default, that is 20 than $LIMITS will prevail. 
+# 
+# -] If "totalResultsByTime" is greater than 10_000 then 
+#    
+# 
 if $TIME_FILTER == true then 
   tmp = curlQuery( "* AND ( #{LQSTR} )", count: true)
   totalResultsByTime = JSON.parse(tmp)["count"].to_i
+  # to transporta this value at the end of the script and take decisions 
+  # on the messages to show.
+  $LIMIT_BY_TIME = totalResultsByTime
   # puts "Total documents to retrive: #{totalResultsByTime}."
   $MYDEBUG_VALS['counterQueryResult'] = tmp
   $MYDEBUG_VALS['numDocPerTimeWin'] = totalResultsByTime
-  if (totalResultsByTime >= 10_000) then 
-    STDERR.puts "Error, the number of loglines to get would be #{totalResultsByTime}."
-    STDERR.puts "Please refine your search criteria, the maximum number of lines allowed in output is 10_000."
-    exit(1)
+  if ($LIMIT_BY_TIME >= 10_000) then 
+    # -] since $LIMIT_BY_TIME is not a good value then $LIMIT is USED 
+    #    so $LIMIT is not modified.
+    nil
+    # STDERR.puts "Error, the number of loglines to get would be #{totalResultsByTime}."
+    # STDERR.puts "Please refine your search criteria, the maximum number of lines allowed in output is 10_000."
+    # exit(1)
   else 
-    $LIMIT = totalResultsByTime;
+    # if $LIMIT_BY_TIME is a good value than it prevails over $LIMIT, 
+    # but if $LIMIT has been given by the user then $LIMIT will prevail.
+    if ($LIMIT == $LIMIT_DEFAULT) then 
+      $LIMIT = $LIMIT_BY_TIME
+    else
+      # if $LIMIT != $LIMIT_DEFAULT it means that the user has specified its value
+      # on the command line. In this case $LIMIT will prevail over the time.
+      nil 
+    end
   end 
 end
 
@@ -695,7 +732,7 @@ JSON.parse(tmp)['hits']['hits'].each do |el|
   end
 end; nil 
 
-# STDERR.puts "=== Development version of Elastico, unstable, don't use ===="
+
 # -] Printer all lines in "lineBuffer".
 lineBuffer.reverse.each do |l|
   next if l.nil?
@@ -706,7 +743,37 @@ lineBuffer.reverse.each do |l|
   end
 end 
 
-# STDERR.puts "=== Development version of Elastico, unstable, don't use ===="
+# =====================================================================================
+
+# -] Print informative message if some automatic selections were made on the 
+#    data to display.
+
+if ($LIMIT_IN_TIME_AND_SIZE == true) then 
+  STDERR.puts "=== WARNING === Parameters '-t' and '-l' are not independent, one will prevail. "
+end 
+
+if (($LIMIT_BY_TIME != nil) and 
+    ($LIMIT_BY_TIME > 10_000) and 
+    ($LIMIT == $LIMIT_DEFAULT)) then  
+     STDERR.puts "=== WARNING === Matching log-lines: #{$LIMIT_BY_TIME}, exceeding 10_000, cut to default: #{$LIMIT_DEFAULT}. " 
+end 
+
+if (($LIMIT_BY_TIME != nil) and 
+    ($LIMIT_BY_TIME >= $LIMIT) and
+    ($LIMIT != $LIMIT_DEFAULT)) then  
+     STDERR.puts "=== WARNING === logline limit implied by '-t': #{$LIMIT_BY_TIME} exceeds limit imposed by '-l': #{$LIMIT}. => '-l' prevails. " 
+end 
+
+if (($LIMIT_BY_TIME != nil) and 
+    ($LIMIT_BY_TIME < $LIMIT) and 
+    ($LIMIT != $LIMIT_DEFAULT)) then  
+     STDERR.puts "=== WARNING === logline limit implied by '-t': #{$LIMIT_BY_TIME} does not exceed limit imposed by '-l': #{$LIMIT}. => '-t' is honoured. " 
+end 
+
+
+
+# =====================================================================================
+
 
 # -] Print to STDERR debug informations if parameter "-d" is in ARGV.
 #
