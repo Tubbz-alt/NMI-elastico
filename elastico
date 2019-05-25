@@ -99,7 +99,8 @@ the following fields:
        discarded. If '-t' parameter is called together with parameter '-l' then parameter 
        '-l' will prevail. If parameter '-t' is called without parameter '-l' and its 
        implied number of results would be larger than 10_000 then the default number of 
-       lines will be printed, that is 20.        
+       lines will be printed, that is 20. When a cuts needs to be done on the loglines
+       by default older logs are cut.       
   
        There are three accepted syntaxes to specifiy the time window:
 
