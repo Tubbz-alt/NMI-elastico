@@ -570,7 +570,7 @@ end
       exit(1)
     end
     if (val.to_i > 10_000) then 
-      STDERR.puts "Error, at the moment the maxium number of line retrivable is 10_000."
+      STDERR.puts "Error, at the moment the maxium number of lines retrivable is 10_000."
       exit(1)
     end
     $LIMIT = ARGV[idx+1].to_i
@@ -759,15 +759,13 @@ if (($LIMIT_BY_TIME != nil) and
      STDERR.puts "=== WARNING === Matching log-lines: #{$LIMIT_BY_TIME}, exceeding 10_000, cut to default: #{$LIMIT_DEFAULT}. " 
 end 
 
-if (($LIMIT_BY_TIME != nil) and 
-    ($LIMIT_BY_TIME >= $LIMIT) and
-    ($LIMIT != $LIMIT_DEFAULT)) then  
+if (($LIMIT_IN_TIME_AND_SIZE != nil) and 
+    ($LIMIT_BY_TIME >= $LIMIT)) then  
      STDERR.puts "=== WARNING === logline limit implied by '-t': #{$LIMIT_BY_TIME} exceeds limit imposed by '-l': #{$LIMIT}. => '-l' prevails. " 
 end 
 
-if (($LIMIT_BY_TIME != nil) and 
-    ($LIMIT_BY_TIME < $LIMIT) and 
-    ($LIMIT != $LIMIT_DEFAULT)) then  
+if (($LIMIT_IN_TIME_AND_SIZE != nil) and 
+    ($LIMIT_BY_TIME < $LIMIT)) then  
      STDERR.puts "=== WARNING === logline limit implied by '-t': #{$LIMIT_BY_TIME} does not exceed limit imposed by '-l': #{$LIMIT}. => '-t' is honoured. " 
 end 
 
