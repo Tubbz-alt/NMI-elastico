@@ -42,8 +42,11 @@ The syntax of the QUERY is the so called "Lucene Query Syntax".
 It is almost indentical of the one accpeted by Kibana interface. 
 
 By default the search is made into the <b>lclslogs</b> index, 
-that is, we search into all log files lines stored in "psmetric01:/u2/logs"
-and processed by Elasticsearch.
+that is, we search into log files lines stored in "psmetric01:/u2/logs"
+and processed by Elasticsearch. 
+
+By default the search is limited to the log produced in the last
+48 hours. If parameter "-l" or "-h" is present such restriction falls.
 
 By default the search is made into the "src" field of each document.
 The field contains the log line as red from 'psmetric01:/u2/logs/*/*' .
@@ -260,6 +263,11 @@ require 'tempfile'
 
 # require 'pry'
 
+# -] If we put "elastico" output in a pipe and the pipe get closed 
+#    this prevents ugly error messages and give the same typical behaviour
+#    of unix shell programs, as "cat". 
+#    see here for details: http://tinyurl.com/y3ehavge
+Signal.trap("SIGPIPE", "SYSTEM_DEFAULT") 
 
 # Example of Lucene Query sintax to Elasticsearch CURL 
 # curl -XGET 'http://psmetric04:9200/lclslogs/_search?pretty=true' -H 'Content-Type: application/json' -d '{"query": { "query_string": { "default_field":"src", "query":"psmetric01"     }      }     }'
@@ -300,7 +308,8 @@ $MYDEBUG_VALS = {}
 # The two values are in milliseconds. "$TIME_FILTER" 
 # is true iff the time window has been specified on the command line.
 $TIME_FILTER = false;
-$DATE0 = 0
+# By default search stuff starting from 48 hours ago, value to put in milliseconds.  
+$DATE0 = ((Time.now.to_i)*1000) - (48 * 60 * 60 * 1_000)
 # checked considtente with "date" :
 # $> ruby -e 'puts "unix: #{`date "+%s"`}"; puts "ruby: #{Time.now.to_i} " '
 $DATE1 = ((Time.now.to_i)*1000)
@@ -527,15 +536,21 @@ if (ARGV.length <= 2) and (ARGV[0] == "-h") then
   end
 end 
 
+# -] If there is parameter "-l" but there is not parameter "-t"
+#    then we must force the start of the logs from the beginning 
+#    of time, we can not start from 48 h ago, to save time. 
+if ( ARGV.include?("-l") and 
+     (not ARGV.include?("-t")) ) then 
+  $DATE0 = 0;
+end 
+
+
 # -] Parameters consistency check.
-#    parameters "-t" and "-l" can not be set on the same query, they
-#    give inconsistent directions because "-t" defines implicitely the number of lines
-#    it needs to get, "-l" does it explicitely.
+#    Parameter "-t" and "-l" step each other feet, so when they 
+#    both present there are a lot of special conditions.
 # 
 if ( ARGV.include?("-t") and 
      ARGV.include?("-l") ) then 
-  # STDERR.puts "Error, parameters '-l' and '-t' are conflicting and can't be put on the same query."
-  # exit(1)
   $LIMIT_IN_TIME_AND_SIZE = true 
 end 
 
