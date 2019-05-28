@@ -1,0 +1,216 @@
+.\" First test 
+.\" $> man ./elastico.1
+.\" See this pages for examples: 
+.\" http://tinyurl.com/y6hratuz
+.TH ELASTICO 1 
+.SH NAME 
+elastico \- search log lines stored in Elasticsearch
+.SH SYNOPSIS
+.B elastico 
+[\fB-h\fR] 
+.TP
+.B elastico 
+[\fB-d\fR] [\fB-l\fR num] [\fB-t\fR TIMESTRING] [\fB-s\fR] [\fB-h\fR] 
+.IR QUERY 
+.SH DESCRIPTION
+The fastest way to start to use this program is to read  the examples section at the end of this document.
+.TP
+The syntax of the QUERY is the so called \fBLucene Query Syntax\fR. It is almost indentical of the one accpeted by Kibana interface. 
+.TP
+By default the search is made into the \fBlclslogs\fR index, that is, we search into log files lines stored in \fBpsmetric01:/u2/logs\fR and processed by Elasticsearch. 
+.TP
+By default the search is limited to the log produced in the last 48 hours. If parameter \fB-l\fR or \fB-h\fR is present such restriction falls.
+.TP
+By default the search is made into the \fBsrc\fR
+field of each document. The field contains the log line as red from \fBpsmetric01:/u2/logs/*/*\fR.
+.TP
+At the time of writing this text the \fBlclslogs\fR index contains the following fields: 
+.TP
+.BR \fBdate\fR 
+Date appearing in the logfile, extended to contain a guessed value for the year.  
+.TP
+.BR \fBmachine\fR 
+Machine producing the message. (eg. psmetric01, psana101 etc. )
+.TP
+.BR \fBservice\fR 
+Service producing the message (eg. cron, systemd, ... )
+.TP
+.BR \fBmessage\fR 
+The message part of a log line. (eg. "Cannot create socket to [psmonit]:8020 -- Connection refused")
+.TP
+.BR \fBfile\fR 
+Logfile name where the message was found (eg. messages, cron, etc. )
+.TP
+.BR \fBsrc\fR 
+To simplify the search by shell this field was added in a second phase. It contains the log line as it is recorded in 'psmetric01:/u2/logs/*/*'. eg:
+ "Dec  5 14:57:27 psana1507 monit[6494]: Cannot create socket to [psmonit]:8020 -- Connection refused"  
+.SH OPTIONS
+.TP
+.BR -d  
+Shows \fBdebug<\fR informations. Intermediate values and global variables that can simplify the understanding of the program in case something goes wrong. The debug information is printed at the end of the search results into STDERR.
+.TP
+.BR -l 
+Maximum number of <b>lines</b> to retrive from Elasticsearch. It must be a positive integer. Default to 20. The current maximum value is 10_000. This parameter is complementary to '-t'. When '-l' and '-t' are used together then '-l' prevails.
+.TP
+.BR -h
+If given as the only parameter then the program will output the documentation. If there are other parameters then the matched words in output will be <b>highlighted</b>. Words of specific fields as e.g. machine:foo will not be highlithed, it only applies to the default <b>src</b> field. Default to false.
+.TP
+   <b>-s</b> By default this program asks Elasticsearch to <b>sort</b> the results 
+       by time. With this parameter Elasticsearch will be asked instead to 
+       sort the results by <b>relevance</b>. 
+
+   <b>-t</b> <b>Time window</b>. With this parameter we tell Elasticsearch we are 
+       interested in filtering the search to to a specific time window.
+
+       Sometimes the time limits will not be honoured and some of the older log will be 
+       discarded. If '-t' parameter is called together with parameter '-l' then parameter 
+       '-l' will prevail. If parameter '-t' is called without parameter '-l' and its 
+       implied number of results would be larger than 10_000 then the default number of 
+       lines will be printed, that is 20. When a cuts needs to be done on the loglines
+       by default older logs are cut.       
+  
+       There are three accepted syntaxes to specifiy the time window:
+
+         1] Delta backward in time from present time.
+               -t ABS_DELTA
+                  ABS_DELTA matches regexp /\\d+[dhm]/
+
+               -t 10m             => filter results to the last 10 minutes 
+
+         2] Delta backward/forward in time from a specified date-time instant.
+               -t [YYYY]-[MMM]-[DD]-[HH:MM]__[+-]ABS_DELTA
+               -t  2018-dec-10-10:30__-10m
+               -t  dec-10__+3d 
+
+         3] Explicit time window described by two date-time points. 
+               -t [YYYY]-[MMM]-[DD]-[HH:MM]__[YYYY]-[MMM]-[DD]-[HH:MM]
+               -t 2018-dec-10-15:50__2018-dec-15-16:30          
+               -t dec-10__dec-15
+               -t 14:30__15:15
+
+       In general, when data is missing from a time point description values are 
+       inferred from the current day. So dec-10 is auto completed to 2018-dec-10.       
+
+       If the hour is missing then, on the left hand side of a '__' divider it is 
+       auto-completed into the first second of the selected, on the right hand side of 
+       a '__' divider it is autocompleted to the last second of the selected day. 
+       
+       Given the generality and flexibility of TIMESTRING it is better described
+       by examples than by a formal grammar. See the Examples section.       
+
+.SH SEE ALSO
+useradd(8), passwd(5), nuseradd.debian(8) 
+.SH BUGS
+No known bugs.
+
+<b>SYNOPSIS</b>
+<b>$> elastico -h </b>                    # open the manual page with pager 'less'
+
+<b>$> elastico -h html</b>                # write in STDOUT the manual as HTML page
+
+<b>$> elastico [-d] [-l num] [-t TIMESTRING] [-s] [-h] QUERY </b>
+
+<b>DESCRIPTION</b>
+
+The fastest way to start to use this program is to read 
+the examples section at the end of this document.
+
+The syntax of the QUERY is the so called "Lucene Query Syntax".
+It is almost indentical of the one accpeted by Kibana interface. 
+
+By default the search is made into the <b>lclslogs</b> index, 
+that is, we search into log files lines stored in "psmetric01:/u2/logs"
+and processed by Elasticsearch. 
+
+By default the search is limited to the log produced in the last
+48 hours. If parameter "-l" or "-h" is present such restriction falls.
+
+By default the search is made into the "src" field of each document.
+The field contains the log line as red from 'psmetric01:/u2/logs/*/*' .
+
+At the time of writing this text the "lclslogs" index contains
+the following fields: 
+
+<b>date</b>    : Date appearing in the logfile, extended to contain a guessed 
+          value for the year.  
+
+<b>machine</b> : Machine producing the message. 
+          (eg. psmetric01, psana101 etc. )
+
+<b>service</b> : Service producing the message. 
+          (eg. cron, systemd, ... )
+
+<b>message</b> : The message part of a log line. 
+          (eg. "Cannot create socket to [psmonit]:8020 -- Connection refused")
+
+<b>file</b>    : Logfile name where the message was found: 
+          (eg. messages, cron, etc. )
+
+<b>src</b>     : To simplify the search by shell this field was added in a second
+          phase. It contains the log line as it is recorded in 'psmetric01:/u2/logs/*/*'.
+          eg:
+ "Dec  5 14:57:27 psana1507 monit[6494]: Cannot create socket to [psmonit]:8020 -- Connection refused"  
+
+<b>PARAMETERS</b>
+
+   <b>-d</b>  Shows <b>debug</b> informations. Intermediate values and global variables 
+       that can simplify the understanding of the program in case something goes wrong.
+       The debug information is printed at the end of the search results into STDERR.
+
+   <b>-l</b>  Maximum number of <b>lines</b> to retrive from Elasticsearch. It must
+       be a positive integer. Default to 20. The current maximum value is 10_000.
+       This parameter is complementary to '-t'. When '-l' and '-t' are used together
+       then '-l' prevails.
+
+   <b>-h</b>  If given as the only parameter then the program will output 
+       the documentation. If there are other parameters then the 
+       matched words in output will be <b>highlighted</b>. Words 
+       of specific fields as e.g. machine:foo will not be highlithed,
+       it only applies to the default <b>src</b> field. Default to false.
+
+   <b>-s</b> By default this program asks Elasticsearch to <b>sort</b> the results 
+       by time. With this parameter Elasticsearch will be asked instead to 
+       sort the results by <b>relevance</b>. 
+
+   <b>-t</b> <b>Time window</b>. With this parameter we tell Elasticsearch we are 
+       interested in filtering the search to to a specific time window.
+
+       Sometimes the time limits will not be honoured and some of the older log will be 
+       discarded. If '-t' parameter is called together with parameter '-l' then parameter 
+       '-l' will prevail. If parameter '-t' is called without parameter '-l' and its 
+       implied number of results would be larger than 10_000 then the default number of 
+       lines will be printed, that is 20. When a cuts needs to be done on the loglines
+       by default older logs are cut.       
+  
+       There are three accepted syntaxes to specifiy the time window:
+
+         1] Delta backward in time from present time.
+               -t ABS_DELTA
+                  ABS_DELTA matches regexp /\\d+[dhm]/
+
+               -t 10m             => filter results to the last 10 minutes 
+
+         2] Delta backward/forward in time from a specified date-time instant.
+               -t [YYYY]-[MMM]-[DD]-[HH:MM]__[+-]ABS_DELTA
+               -t  2018-dec-10-10:30__-10m
+               -t  dec-10__+3d 
+
+         3] Explicit time window described by two date-time points. 
+               -t [YYYY]-[MMM]-[DD]-[HH:MM]__[YYYY]-[MMM]-[DD]-[HH:MM]
+               -t 2018-dec-10-15:50__2018-dec-15-16:30          
+               -t dec-10__dec-15
+               -t 14:30__15:15
+
+       In general, when data is missing from a time point description values are 
+       inferred from the current day. So dec-10 is auto completed to 2018-dec-10.       
+
+       If the hour is missing then, on the left hand side of a '__' divider it is 
+       auto-completed into the first second of the selected, on the right hand side of 
+       a '__' divider it is autocompleted to the last second of the selected day. 
+       
+       Given the generality and flexibility of TIMESTRING it is better described
+       by examples than by a formal grammar. See the Examples section.       
+
+.SH AUTHOR
+Dr. Nicola Mingotti (nicola.mingotti@slac.stanford.edu)
+
