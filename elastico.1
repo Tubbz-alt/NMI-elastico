@@ -7,15 +7,15 @@
 elastico \- search log lines stored in Elasticsearch
 .SH SYNOPSIS
 .B elastico 
-[\fB-h\fR] 
-.TP
-.B elastico 
 [\fB-d\fR] [\fB-l\fR num] [\fB-t\fR TIMESTRING] [\fB-s\fR] [\fB-h\fR] 
 .IR QUERY 
+.SH WARNING
+This manual enters into details. The practical reader may find what he is looking for just jumping at example section at the end.
 .SH DESCRIPTION
-The fastest way to start to use this program is to read  the examples section at the end of this document.
 .TP
-The syntax of the QUERY is the so called \fBLucene Query Syntax\fR. It is almost indentical of the one accpeted by Kibana interface. 
+The syntax of the QUERY is the so called \fBLucene Query Syntax\fR. It is almost identical of the one accepted by Kibana interface. 
+.TP
+These characters have special meaning in Lucene: + - && || ! () {} [] ^ "" ~ * ? : \\. '\\' is Lucene escape character. We escape by default the '-' character because many of our machines contain it in their hostname eg. 'ioc-hpl-03'.
 .TP
 By default the search is made into the \fBlclslogs\fR index, that is, we search into log files lines stored in \fBpsmetric01:/u2/logs\fR and processed by Elasticsearch. 
 .TP
@@ -23,10 +23,10 @@ By default the search is limited to the log produced in the last 48 hours. If pa
 .TP
 By default the search is made into the \fBsrc\fR field of each document. The field contains the log line as red from \fBpsmetric01:/u2/logs/*/*\fR.
 .TP
-At the time of writing this text the \fBlclslogs\fR index contains the following fields: 
+The \fBlclslogs\fR index contains the following fields: 
 .TP
 .BR \fBdate\fR 
-Date appearing in the logfile, extended to contain a guessed value for the year.  
+Date appearing in the log file, extended to contain a guessed value for the year.  
 .TP
 .BR \fBmachine\fR 
 Machine producing the message. (eg. psmetric01, psana101 etc. )
@@ -38,7 +38,7 @@ Service producing the message (eg. cron, systemd, ... )
 The message part of a log line. (eg. "Cannot create socket to [psmonit]:8020 -- Connection refused")
 .TP
 .BR file
-Logfile name where the message was found (eg. messages, cron, etc. )
+Log file name where the message was found (eg. messages, cron, etc. )
 .TP
 .BR src
 To simplify the search by shell this field was added in a second phase. It contains the log line as it is recorded in 'psmetric01:/u2/logs/*/*'. eg:
@@ -46,13 +46,13 @@ To simplify the search by shell this field was added in a second phase. It conta
 .SH OPTIONS
 .TP
 .BR -d  
-Shows \fBdebug\fR informations. Intermediate values and global variables that can simplify the understanding of the program in case something goes wrong. The debug information is printed at the end of the search results into STDERR.
+Shows \fBdebug\fR information. Intermediate values and global variables that can simplify the understanding of the program in case something goes wrong. The debug information is printed at the end of the search result into STDERR.
 .TP
 .BR -l 
-Maximum number of \fBlines\fR to retrive from Elasticsearch. It must be a positive integer. Default to 20. The current maximum value is 10_000. This parameter is complementary to '-t'. When '-l' and '-t' are used together then '-l' prevails.
+Maximum number of \fBlines\fR to retrieve from Elasticsearch. It must be a positive integer. Default to 20. The current maximum value is 10_000. This parameter is complementary to '-t'. When '-l' and '-t' are used together then '-l' prevails.
 .TP
 .BR -h
-If given as the only parameter then the program will output the documentation. If there are other parameters then the matched words in output will be \fBhighlighted\fR. Words of specific fields as e.g. machine:foo will not be highlithed, it only applies to the default \fBsrc\fR field. Default to false.
+If given as the only parameter then the program will output a short message directing to this man page. If there are other parameters then the matched words in output will be \fBhighlighted\fR. Words of specific fields as e.g. machine:foo will not be highlighted, it only applies to the default \fBsrc\fR field. Default to false.
 .TP 
 .BR -s
 By default this program asks Elasticsearch to \fBsort\fR the results by time. With this parameter Elasticsearch will be asked instead to sort the results by relevance. 
@@ -60,9 +60,9 @@ By default this program asks Elasticsearch to \fBsort\fR the results by time. Wi
 .BR -t 
 \fBTime window\fR. With this parameter we tell Elasticsearch we are interested in filtering the search to to a specific time window.
 .TP
-Sometimes the time limits will not be honoured and some of the older log will be discarded. If '-t' parameter is called together with parameter '-l' then parameter '-l' will prevail. If parameter '-t' is called without parameter '-l' and its implied number of results would be larger than 10_000 then the default number of lines will be printed, that is 20. When a cuts needs to be done on the loglines by default older logs are cut.       
+Sometimes the '-t' time limits will not be honored and some of the older log will be discarded. If '-t' parameter is called together with parameter '-l' then parameter '-l' will prevail. If parameter '-t' is called without parameter '-l' and its implied number of results would be larger than 10_000 then the default number of lines will be printed, that is 20. When a cut needs to be done on the log lines by default older logs are cut.       
 .TP  
-There are three accepted syntaxes to specifiy the time window:
+There are three accepted syntax to specify the time window:
 .TP
 .nf 
 1] Delta backward in time from present time.
@@ -95,21 +95,16 @@ There are three accepted syntaxes to specifiy the time window:
   => chooses logs produced from 14:30 to 15:15 (of today).
 .fi
 .TP
-In general, when data is missing from a time point description values are inferred from the current day. So dec-10 is auto completed to 2018-dec-10 if we are in the year 2018.       
+In general, when date part is missing from a time point description values are inferred from the current day. So dec-10 is auto completed to 2018-dec-10, if we are in the year 2018.       
 .TP
-If the hour is missing then, on the left hand side of a '__' divider it is auto-completed into the first second of the selected, on the right hand side of a '__' divider it is autocompleted to the last second of the selected day. 
-.TP       
-Given the generality and flexibility of TIMESTRING it is better described by examples than by a formal grammar. See the Examples section.       
+If the time part is missing on the left hand side of a '__' divider, then it is auto-completed into the first second of the selected day; on the right hand side of a '__' divider it is auto-completed to the last second of the selected day. 
 .SH REQUIREMENTS
 .TP
 .BR curl
 This software is not at all necessary and the dependency may be removed in future releases
 .TP
-.BR less
-The "man" page visibile with 'elastico -h' goes to default to that pager. There is not a separate man page to keep all the application in a single file, code and documentation.
-.TP
 .BR ruby
-This software is written in Ruby. Rationale; Ruby is some kind of a OO version of Perl. Ideal for intense regexp work.     
+This software is written in Ruby. Rationale; Ruby is some kind of a O.O. version of Perl. Ideal for intense regexp work.     
 .SH EXAMPLES
 .nf 
 ===========================================
@@ -129,43 +124,39 @@ This software is written in Ruby. Rationale; Ruby is some kind of a OO version o
 === Special Characters ====================
 ===========================================
 
-# Generic search over an approximate username 
-# Quote is necessary because "~" is special character in Bash.
-\fB$> elastic 'omar~'\fR
-
 # Generic search over everything that can be: psana101, psana103 etc.
 # Observe that the quotes are fundamental to stop Bash from interpreting
-# "*". 
+# "*".
 \fB$> elastico 'psana*'\fR        
 
-# Search all log lines where there appear the work "nmingott" somwhere
-# AND the machine is a string which contains "metric".
-# Booleans MUST BE upcase words.
+# Search all log lines where there appear the word "nmingott"
+# AND the machine field contains "metric".
+# Boolean MUST BE uppercase words.
 \fB$> elastico 'nmingott AND machine:*metric*'\fR
 
 # Elaboration respect to the previous example, matching all lines where "nmingott"
-# appers and the machine is a string containing *ana* or *metric*.
+# appears and the machine is a string containing *ana* or *metric*.
 # This examples shows that (...) is the syntax for  
-# grouping of booleans and that it is not necessary to write
+# grouping of Boolean and that it is not necessary to write
 # (machine:*metric* OR machine:*ana*) in full.
 \fB$> elastico 'nmingott AND machine:(*metric* OR *ana*)'\fR
 
-# See last logs in psmetrico01
+# See last logs in psmetric01
 \fB$> elastico 'machine:psmetric01'\fR
 
 # See the last 200 log lines in psmetric01
 \fB$> elastico -l 200 'machine:psmetric01'\fR
 
-# See the log lines that best metch a string,
+# See the log lines that best match a string,
 # return results according to Elasticsearch 'relevance' 
 # algorithm, not by date. In general, more time the string
 # is matched in the log line the more a line is 'relevant'.
 \fB$> elastico -S 'ana*'\fR
 
-# Hilight the search results 
+# Highlight the search results 
 \fB$> elastico -l 20 -h 'wilko'\fR
 
-# Autocomplete only for a specific number of characters
+# Auto-complete only for a specific number of characters
 # In this case all 'psana' followed by 3 characters.
 \fB$> psana -h 'psana???'\fR
 
@@ -175,7 +166,7 @@ This software is written in Ruby. Rationale; Ruby is some kind of a OO version o
 
 # Show all logs related to 'psana???' in the last
 # 5 minutes. With the same syntax we can use the specifiers
-# <b>m</b> minutes, <b>h</b> hours, <b>d</b> days.
+# 'm' form minutes, 'h' for 'hours and  'd' for days.
 \fB$> elastico -t 5m 'psana???'\fR
 
 # If we are unhappy about the result and suspect something
@@ -202,21 +193,22 @@ This software is written in Ruby. Rationale; Ruby is some kind of a OO version o
 or, if we are still in 2018 
 \fB$> elastico  -t dec-15-13:00__dec-16-14:25 'psana101'\fR
 
-# We want to see the data in two specific date, all day hours.
-# If the hour is not specified and there are two specific date-time
-# points then the hour of the date on the left hand side is 00:00,
+# We want to see the logs between two specific dates.
+# If the hour is not specified and there are two specific dates
+# then the hour for the left hand side is 00:00,
 # the hour for the right hand side is 23:59.
 \fB$> elastico  -t dec-15__dec-16 'psana103'\fR
 
-# Filter all today logs generated beween 10:30 and 11:00.
+# Filter all today logs generated between 10:30 and 11:00.
 \fB$> elastico  -t 10:30__11:00 'psana103'\fR
 .fi 
 .SH REFERENCES
+.nf
 -] "Lucene Query Syntax", see https://goo.gl/GPPSdJ
-.TP 
 -] "Elasticsearch the definitive guide" by Gromley, Tong -- O'Reilly 2015.
+.fi
 .SH SEE ALSO
-FOO BAR BAZ useradd(8), passwd(5), nuseradd.debian(8) 
+elasticall(1)
 .SH BUGS
 No known bugs.
 .SH AUTHOR
