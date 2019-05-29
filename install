@@ -6,12 +6,33 @@
 
 require 'fileutils'
 
-$HOST=`uname`
+# -] Check that the user is root, to perform the install 
+if `whoami`.strip != "root" then 
+  STDERR.puts "Error, this script should be run by root or with sudo."
+  exit(1)
+end 
 
+# -] Perform the installation in different operating systems. 
+# 
+$HOST=`uname`
+# ----- For linux 
 if ($HOST.match /linux/i) then 
-  FileUtils.copy("elastico","/usr/bin/elastico")
+  FileUtils.cp "elastico", "/usr/bin/elastico" 
+  # compress the man page
+  # dir = Dir.pwd
+  system("gzip -c elastico.1 > /tmp/elastico.1.gz")
+  # move the man page to destination 
+  FileUtils.mv "/tmp/elastico.1.gz", "/usr/share/man/man1/elastico.1.gz"  
+# 
+# ----- For FreeBSD   
 elsif ($HOST.match /freebsd/i) then 
-  FileUtils.copy("elastico","/usr/local/bin/elastico")
+  FileUtils.cp "elastico", "/usr/local/bin/elastico"
+  # compress the man page 
+  system("gzip -c elastico.1 > /tmp/elastico.1.gz")
+  # move the man page to destination 
+  FileUtils.mv "/tmp/elastico.1.gz", "/usr/local/man/man1/elastico.1.gz"
+# 
+# ----- For other OS(s)
 else 
   STDERR.puts "> Automatic installation valid only in Linux and FreeBSD."
   STDERR.puts "> You must copy elastico script to the appropriate position in your System."
