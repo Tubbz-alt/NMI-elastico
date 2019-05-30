@@ -249,13 +249,11 @@ if ARGV.length == 0 then
   exit(1)
 end 
 
-# -] If "-h" is first argument show the documentation
+# -] If "-h" is first argument and there is no other argument the suggest to open the manpage
 #
-if (ARGV.length <= 2) and (ARGV[0] == "-h") then 
-
+if (ARGV.length <= 1) and (ARGV[0] == "-h") then 
   STDERR.puts "See the manual page with $> man elastico."
   exit(1)
-
 end 
 
 # -] If there is parameter "-l" but there is not parameter "-t"

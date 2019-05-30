@@ -15,7 +15,7 @@ This manual enters into details. The practical reader may find what he is lookin
 .TP
 The syntax of the QUERY is the so called \fBLucene Query Syntax\fR. It is almost identical of the one accepted by Kibana interface. 
 .TP
-These characters have special meaning in Lucene: + - && || ! () {} [] ^ "" ~ * ? : \\. '\\' is Lucene escape character. If your query behaves unexpectedly check them out and compare with the documentation resources provided and the end.
+These characters have special meaning in Lucene: + - && || ! () {} [] ^ "" ~ * ? : \\. '\\' is Lucene escape character. If your query behaves unexpectedly check them out and compare with the documentation resources provided at the end.
 .\" We escape by default the '-' character because many of our machines contain it in their hostname eg. 'ioc-hpl-03'.
 .TP 
 Wildcard characters as: '*' and '?' can greatly reduce the search speed. A wildcard at the beginning of a word is expecially heavy because all words in the reverse index must be checked, just in case they will match on the following characters. Regexp can also be used, they must we written as /REGEXP/ and conform to the syntax here: http://tinyurl.com/y382rp8x.
