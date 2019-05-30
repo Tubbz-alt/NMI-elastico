@@ -15,7 +15,10 @@ This manual enters into details. The practical reader may find what he is lookin
 .TP
 The syntax of the QUERY is the so called \fBLucene Query Syntax\fR. It is almost identical of the one accepted by Kibana interface. 
 .TP
-These characters have special meaning in Lucene: + - && || ! () {} [] ^ "" ~ * ? : \\. '\\' is Lucene escape character. We escape by default the '-' character because many of our machines contain it in their hostname eg. 'ioc-hpl-03'.
+These characters have special meaning in Lucene: + - && || ! () {} [] ^ "" ~ * ? : \\. '\\' is Lucene escape character. If your query behaves unexpectedly check them out and compare with the documentation resources provided and the end.
+.\" We escape by default the '-' character because many of our machines contain it in their hostname eg. 'ioc-hpl-03'.
+.TP 
+Wildcard characters as: '*' and '?' can greatly reduce the search speed. A wildcard at the beginning of a word is expecially heavy because all words in the reverse index must be checked, just in case they will match on the following characters. Regexp can also be used, they must we written as /REGEXP/ and conform to the syntax here: http://tinyurl.com/y382rp8x.
 .TP
 By default the search is made into the \fBlclslogs\fR index, that is, we search into log files lines stored in \fBpsmetric01:/u2/logs\fR and processed by Elasticsearch. 
 .TP
@@ -52,7 +55,7 @@ Shows \fBdebug\fR information. Intermediate values and global variables that can
 Maximum number of \fBlines\fR to retrieve from Elasticsearch. It must be a positive integer. Default to 20. The current maximum value is 10_000. This parameter is complementary to '-t'. When '-l' and '-t' are used together then '-l' prevails.
 .TP
 .BR -h
-If given as the only parameter then the program will output a short message directing to this man page. If there are other parameters then the matched words in output will be \fBhighlighted\fR. Words of specific fields as e.g. machine:foo will not be highlighted, it only applies to the default \fBsrc\fR field. Default to false.
+The matched words in output will be \fBhighlighted\fR. Words of specific fields as e.g. machine:foo will not be highlighted, it only applies to the default \fBsrc\fR field. Default to false.
 .TP 
 .BR -s
 By default this program asks Elasticsearch to \fBsort\fR the results by time. With this parameter Elasticsearch will be asked instead to sort the results by relevance. 
@@ -125,21 +128,22 @@ This software is written in Ruby. Rationale; Ruby is some kind of a O.O. version
 ===========================================
 
 # Generic search over everything that can be: psana101, psana103 etc.
-# Observe that the quotes are fundamental to stop Bash from interpreting
-# "*".
+# Observe that the quotes are fundamental to stop Bash from interpreting "*".
+# NOTE: wildcards are computationally heavy.
+# NOTE: wildcards at the beginning of words are very heavy.
 \fB$> elastico 'psana*'\fR        
 
 # Search all log lines where there appear the word "nmingott"
-# AND the machine field contains "metric".
+# AND the machine field contains "psmetric".
 # Boolean MUST BE uppercase words.
-\fB$> elastico 'nmingott AND machine:*metric*'\fR
+\fB$> elastico 'nmingott AND machine:psmetric*'\fR
 
 # Elaboration respect to the previous example, matching all lines where "nmingott"
-# appears and the machine is a string containing *ana* or *metric*.
+# appears and the machine is a string containing psana* or *metric*.
 # This examples shows that (...) is the syntax for  
 # grouping of Boolean and that it is not necessary to write
 # (machine:*metric* OR machine:*ana*) in full.
-\fB$> elastico 'nmingott AND machine:(*metric* OR *ana*)'\fR
+\fB$> elastico 'nmingott AND machine:(psmetric* OR psana*)'\fR
 
 # See last logs in psmetric01
 \fB$> elastico 'machine:psmetric01'\fR
@@ -151,6 +155,8 @@ This software is written in Ruby. Rationale; Ruby is some kind of a O.O. version
 # return results according to Elasticsearch 'relevance' 
 # algorithm, not by date. In general, more time the string
 # is matched in the log line the more a line is 'relevant'.
+# ATTENTION: here "psana" is not a match, before "ana" there
+# must be a stopword as a space or "-" etc.
 \fB$> elastico -S 'ana*'\fR
 
 # Highlight the search results 
@@ -205,7 +211,9 @@ or, if we are still in 2018
 .SH REFERENCES
 .nf
 -] "Lucene Query Syntax", see https://goo.gl/GPPSdJ
+-] "Elasticsearch Query String", see http://tinyurl.com/y3cbyas8
 -] "Elasticsearch the definitive guide" by Gromley, Tong -- O'Reilly 2015.
+-] "Regexp Query in Elasticsearch", see http://tinyurl.com/y382rp8x
 .fi
 .SH SEE ALSO
 elasticall(1)

@@ -14,14 +14,10 @@
 =end 
 
 
-
-
-
-
 require 'json'
 require 'date'
 require 'tempfile'
-
+# 
 # require 'pry'
 
 # -] If we put "elastico" output in a pipe and the pipe get closed 
@@ -30,7 +26,8 @@ require 'tempfile'
 #    see here for details: http://tinyurl.com/y3ehavge
 Signal.trap("SIGPIPE", "SYSTEM_DEFAULT") 
 
-# Example of Lucene Query sintax to Elasticsearch CURL 
+# -] Example of Lucene Query syntax to Elasticsearch CURL 
+# 
 # curl -XGET 'http://psmetric04:9200/lclslogs/_search?pretty=true' -H 'Content-Type: application/json' -d '{"query": { "query_string": { "default_field":"src", "query":"psmetric01"     }      }     }'
 
 # ==========================================================
@@ -259,46 +256,6 @@ if (ARGV.length <= 2) and (ARGV[0] == "-h") then
   STDERR.puts "See the manual page with $> man elastico."
   exit(1)
 
-  # if ARGV.length == 1 then 
-  #   Tempfile.open('elasticoManual', '/tmp') { |f|  
-  #     doc2 = doc.dup
-  #     # get rid of HTML formatting 
-  #     doc2.gsub! /<pre>/, ""
-  #     doc2.gsub! /<\/pre>/, ""    
-  #     # substitute "<b>" with terminal "bold"
-  #     doc2.gsub! /<b>(.*?)<\/b>/, bolden('\1')
-  #     doc2.split(/\n/).each do |l|
-  #       if l.match(/^\.b/) then 
-  #         tmp = l.sub(/^\.b /, "")
-  #         f.puts " " + bolden(tmp)
-  #       else
-  #         f.puts " " + l
-  #       end
-  #     end
-  #     system("less -R #{f.path}")
-  #   }
-  #   exit(0); 
-
-  # # 
-  # # if we want the HTML page the we need some modifications 
-  # # 
-  # elsif (ARGV.length == 2) and (ARGV[0] == "-h") and (ARGV[1] == "html")
-  #   doc2 = doc.dup
-  #   puts "<html>"
-  #   puts "<body>"
-  #   doc2.split(/\n/).each do |l|
-  #     if l.match(/^\.b/) then 
-  #       tmp = l.sub(/^\.b\ *(.*)$/, '<b>\1</b>')
-  #       puts " " + tmp
-  #     else
-  #       puts " " + l
-  #     end
-  #   end
-  #   puts "</body>"
-  #   puts "</html>"
-  #   exit(0);     
-  # end
-
 end 
 
 # -] If there is parameter "-l" but there is not parameter "-t"
@@ -324,7 +281,6 @@ end
 if ARGV.include?("-d") then 
   $MYDEBUG = true;
 end 
-
 
 
 # -] get parameters values and set constants 
