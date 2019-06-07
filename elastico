@@ -552,7 +552,7 @@ if (STDOUT.tty?) then
   end 
   f.close
   if (f.size == 0) then 
-    puts "No log matches your search criteria. Try to make the search less specific or increase the time window (with -t)."
+    STDERR.puts "No log match your search criteria. Try to make the search less specific or increase the time window (with -t)."
     nil
   else
     system("less #{f.path}")
