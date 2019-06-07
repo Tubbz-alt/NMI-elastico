@@ -551,7 +551,12 @@ if (STDOUT.tty?) then
     end
   end 
   f.close
-  system("less #{f.path}")
+  if (f.size == 0) then 
+    puts "No log matches your search criteria. Try to make the search less specific or increase the time window (with -t)."
+    nil
+  else
+    system("less #{f.path}")
+  end 
   f.unlink
 else
   # -] if we are in a pipe (we are not in a tty) then :
