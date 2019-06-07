@@ -22,7 +22,7 @@ require 'tempfile'
 # 
 # require 'pry'
 
-# -] If we put "elastico" output in a pipe and the pipe get closed 
+# -] If we put "elastico" output in a pipe and the pipe gets closed 
 #    this prevents ugly error messages and give the same typical behaviour
 #    of unix shell programs, as "cat". 
 #    see here for details: http://tinyurl.com/y3ehavge
