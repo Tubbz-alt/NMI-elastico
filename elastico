@@ -4,13 +4,14 @@
 =begin
 
 ---- TODO -----
--] transform the "-" character to and " AND "
+
 
 ---- DONE ------
 -] possibility of sorting results per log date [-s]
 -] possibility of augmenting the search results [-l] 
 -] possibility of restricting the date for the search [-d]
 -] manual page in HTML, for easy print => nope, impemented "$> man elastico"
+-] transform the "-" character to and " AND "
 
 =end 
 
@@ -42,8 +43,8 @@ Signal.trap("SIGPIPE", "SYSTEM_DEFAULT")
 #    changed $LIMIT from a command line parameter. 
 # -] Limit by time is the number of lines to 
 # 
-$LIMIT = 20 
-$LIMIT_DEFAULT = 20
+$LIMIT = 200            # previously was 20 
+$LIMIT_DEFAULT = 200    # previously was 20 
 $LIMIT_BY_TIME = nil
 $LIMIT_IN_TIME_AND_SIZE = nil 
 #
@@ -457,7 +458,6 @@ def manageDashChar(str)
   # remove white spaces at the end 
   return out.strip 
 end 
-
 
 
 # -] Buffer to contain all lines that will be printed 
