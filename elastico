@@ -526,14 +526,44 @@ JSON.parse(tmp)['hits']['hits'].each do |el|
 end; nil 
 
 
-# -] Printer all lines in "lineBuffer".
-lineBuffer.reverse.each do |l|
-  next if l.nil?
-  if $HIGHLIGHT then 
-    puts emphasis(l[0])
-  else
-    puts l
-  end
+# ====================================================================================
+# ====== output management ===========================================================
+# ====================================================================================
+
+# case 1] $> elastico
+# In this case we want the output to be stored in a temporary file 
+# and to be shown in 'less' pager. 
+
+# case 2\ $> elastico | fooCommand 
+# In this case we want the output simply to be sent to STDOUT because 
+# the user wants to perform postprocessing.
+
+if (STDOUT.tty?) then 
+  # if we are in tty (STOUDT is not a tty) then:
+  f = Tempfile.new("elasticoOut","/tmp")
+  # -] Printer all lines in "lineBuffer".
+  lineBuffer.reverse.each do |l|
+    next if l.nil?
+    if $HIGHLIGHT then 
+      f.puts emphasis(l[0])
+    else
+      f.puts l
+    end
+  end 
+  f.close
+  system("less #{f.path}")
+  f.unlink
+else
+  # -] if we are in a pipe (we are not in a tty) then :
+  # -] Printer all lines in "lineBuffer".
+  lineBuffer.reverse.each do |l|
+    next if l.nil?
+    if $HIGHLIGHT then 
+      puts emphasis(l[0])
+    else
+      puts l
+    end
+  end 
 end 
 
 # =====================================================================================
