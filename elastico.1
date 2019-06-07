@@ -9,14 +9,17 @@ elastico \- search log lines stored in Elasticsearch
 .B elastico 
 [\fB-d\fR] [\fB-l\fR num] [\fB-t\fR TIMESTRING] [\fB-s\fR] [\fB-h\fR] 
 .IR QUERY 
-.SH WARNING
+.SH WARNINGS
+If elastico \fBoutput\fR does not go to a pipe then it will be shown in the pager \fIless\fR.
+.TP
 This manual enters into details. The practical reader may find what he is looking for just jumping at example section at the end.
 .SH DESCRIPTION
 .TP
 The syntax of the QUERY is the so called \fBLucene Query Syntax\fR. It is almost identical of the one accepted by Kibana interface. 
 .TP
 These characters have special meaning in Lucene: + - && || ! () {} [] ^ "" ~ * ? : \\. '\\' is Lucene escape character. If your query behaves unexpectedly check them out and compare with the documentation resources provided at the end.
-.\" We escape by default the '-' character because many of our machines contain it in their hostname eg. 'ioc-hpl-03'.
+.TP 
+Since in LCLS many of our hostname include the \fBdash\fR character, to simplify the search this char is transformed by default. A word like 'foo-bar' will be compiled and sent to Elasticsearch as '(foo AND bar)'. 
 .TP 
 Wildcard characters as: '*' and '?' can greatly reduce the search speed. A wildcard at the beginning of a word is expecially heavy because all words in the reverse index must be checked, just in case they will match on the following characters. Regexp can also be used, they must we written as /REGEXP/ and conform to the syntax here: http://tinyurl.com/y382rp8x.
 .TP
@@ -52,7 +55,7 @@ To simplify the search by shell this field was added in a second phase. It conta
 Shows \fBdebug\fR information. Intermediate values and global variables that can simplify the understanding of the program in case something goes wrong. The debug information is printed at the end of the search result into STDERR.
 .TP
 .BR -l 
-Maximum number of \fBlines\fR to retrieve from Elasticsearch. It must be a positive integer. Default to 20. The current maximum value is 10_000. This parameter is complementary to '-t'. When '-l' and '-t' are used together then '-l' prevails.
+Maximum number of \fBlines\fR to retrieve from Elasticsearch. It must be a positive integer. Default to 200. The current maximum value is 10_000. This parameter is complementary to '-t'. When '-l' and '-t' are used together then '-l' prevails.
 .TP
 .BR -h
 The matched words in output will be \fBhighlighted\fR. Words of specific fields as e.g. machine:foo will not be highlighted, it only applies to the default \fBsrc\fR field. Default to false.
@@ -63,7 +66,7 @@ By default this program asks Elasticsearch to \fBsort\fR the results by time. Wi
 .BR -t 
 \fBTime window\fR. With this parameter we tell Elasticsearch we are interested in filtering the search to to a specific time window.
 .TP
-Sometimes the '-t' time limits will not be honored and some of the older log will be discarded. If '-t' parameter is called together with parameter '-l' then parameter '-l' will prevail. If parameter '-t' is called without parameter '-l' and its implied number of results would be larger than 10_000 then the default number of lines will be printed, that is 20. When a cut needs to be done on the log lines by default older logs are cut.       
+Sometimes the '-t' time limits will not be honored and some of the older log will be discarded. If '-t' parameter is called together with parameter '-l' then parameter '-l' will prevail. If parameter '-t' is called without parameter '-l' and its implied number of results would be larger than 10_000 then the default number of lines will be printed, that is 200. When a cut needs to be done on the log lines by default older logs are cut.       
 .TP  
 There are three accepted syntax to specify the time window:
 .TP
@@ -104,7 +107,10 @@ If the time part is missing on the left hand side of a '__' divider, then it is 
 .SH REQUIREMENTS
 .TP
 .BR curl
-This software is not at all necessary and the dependency may be removed in future releases
+This software is not at all necessary and the dependency may be removed in future releases.
+.TP
+.BR less
+Default pager chosen to display the output.
 .TP
 .BR ruby
 This software is written in Ruby. Rationale; Ruby is some kind of a O.O. version of Perl. Ideal for intense regexp work.     
@@ -116,6 +122,9 @@ This software is written in Ruby. Rationale; Ruby is some kind of a O.O. version
 
 # Generic search over a word ... here a machine name 
 \fB$> elastico psana101\fR        
+
+# Machine names with dash are fine
+\fB$> elastico psbuild-rhel7-01\fR        
 
 # Generic search over a word ... here a service name 
 \fB$> elastico monit\fR           
@@ -148,8 +157,8 @@ This software is written in Ruby. Rationale; Ruby is some kind of a O.O. version
 # See last logs in psmetric01
 \fB$> elastico 'machine:psmetric01'\fR
 
-# See the last 200 log lines in psmetric01
-\fB$> elastico -l 200 'machine:psmetric01'\fR
+# See the last 400 log lines in psmetric01
+\fB$> elastico -l 400 'machine:psmetric01'\fR
 
 # See the log lines that best match a string,
 # return results according to Elasticsearch 'relevance' 
