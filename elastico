@@ -4,6 +4,7 @@
 =begin
 
 ---- TODO -----
+-] transform the "-" character to and " AND "
 
 ---- DONE ------
 -] possibility of sorting results per log date [-s]
@@ -405,9 +406,66 @@ def curlQuery(lucQstr="*", sorted: true, size: 20, highlight: false, count: fals
   out 
 end
 
+# The "dash" char is creating a lot of issues in our queries.
+# our machines have often names like "foo-bar-baz". But "-" has a very
+# special meaning in Lucene syntax and it is not easy to eascape while 
+# writing the query from the shell, because the same escape charater is escape
+# in many layers, from the shell to Lucene.
+# 
+# The solution we adopt is the following:
+# 1] all multiple dashes are transformed to a single dash
+# 2] The string in splitted in words, slit chracters are whitespaces.
+# 3] if a word contains one or more "-" then 
+#    it is split in subwords, the split character is "-"
+#    the subword are merged as foollows:
+#    [sub1, sub2, sub3]
+#    (sub1 AND sub2 AND sub3) AND 
+# 
+# Example:  
+#    manageDashChat("foo-bar NOT hey") ==> "(foo AND bar) NOT hey"  
+# 
+def manageDashChar(str) 
+  # if there is no dash character in 'str' then do nothing, just return 'str'.
+  return str if (not str.match /\-/ )
+  # duplicate the stringa 
+  str2 = str.dup
+  # replace multiple near dashes with single dash.
+  str2.gsub! /\-+/, '-'
+  # split sentence in words, separated by whitespaces 
+  words = str2.split /\s/
+  out = ""
+  # for each word ... 
+  words.each do |w|
+    if w.match /-/ then 
+      subWords = w.split /-/
+      newBlock = "("
+      subWords.each do |sw|
+        if newBlock == "(" then 
+          newBlock = newBlock + sw
+        else
+          newBlock = newBlock + " AND " + sw
+        end
+      end
+      newBlock = newBlock + ")"
+      out = out + newBlock
+    else
+      out = out + " " + w + " "
+    end
+  end
+  # replace multiple spaces with a single space
+  out.gsub! /\s+/, ' '
+  # remove white spaces at the end 
+  return out.strip 
+end 
 
-# -] Buffer containing all lines that will be printed 
+
+
+# -] Buffer to contain all lines that will be printed 
 lineBuffer = []
+
+# -] If the query contains dash character, than make appropriate subsitutions
+LQSTR2 = manageDashChar(LQSTR)
+
 
 # -] If the search is by date get the number of results before
 #    actually get them.     
@@ -426,7 +484,7 @@ lineBuffer = []
 #    
 # 
 if $TIME_FILTER == true then 
-  tmp = curlQuery( "* AND ( #{LQSTR} )", count: true)
+  tmp = curlQuery( "* AND ( #{LQSTR2} )", count: true)
   totalResultsByTime = JSON.parse(tmp)["count"].to_i
   # to transporta this value at the end of the script and take decisions 
   # on the messages to show.
@@ -457,7 +515,7 @@ end
 # -] Make the query to Elasticsearch and store all results 
 #    in the buffer "lineBuffer".
 # 
-tmp = curlQuery( "* AND ( #{LQSTR} )", size: $LIMIT, 
+tmp = curlQuery( "* AND ( #{LQSTR2} )", size: $LIMIT, 
                  sorted: $SORTED, highlight: $HIGHLIGHT, count: false)
 JSON.parse(tmp)['hits']['hits'].each do |el|
   if $HIGHLIGHT then
